@@ -1,5 +1,36 @@
 import { useState } from 'react'
 
+const Filter = (props) => {
+  return (
+    <div>
+      <p>Filter by name</p>
+        <input onChange={props.onChange}></input>
+    </div>
+  )
+}
+
+const PersonForm = (props) => {
+  return (
+    <form onSubmit={props.onSubmitHandler}>
+      <div>
+        Name:
+        <input onChange={props.nameOnChange}/>
+      </div>
+      <div>
+        Number:
+        <input onChange={props.numberOnChange}/>
+      </div>
+      <div>
+        <button type="submit">Add</button>
+      </div>
+    </form>
+  )
+}
+
+const Person = (props) => {
+  return <li>{props.name} {props.number}</li>
+}
+
 const App = () => {
   const [persons, setPersons] = useState([
     { name: 'Arto Hellas', number: '8765432' },
@@ -7,6 +38,8 @@ const App = () => {
     { name: 'Dan Abramov', number: '3456' },
     { name: 'Mary Poppendieck', number: '765432' }
   ])
+
+  const [filterValue, setFilterValue] = useState("")
   const [newPerson, setNewPerson] = useState({name: "", number: ""})
 
   const addPerson = (event) => {
@@ -18,6 +51,19 @@ const App = () => {
     } else {
       setPersons(persons.concat(tempPerson))
     }
+    console.log(persons)
+  }
+
+  const filterByName = (person) => {
+    if (filterValue === "") {
+      return person
+    }
+
+    return person.name.toLowerCase().includes(filterValue)
+  }
+
+  const updatePhonebookOnChange = (event) => {
+    setFilterValue(event.target.value.toLowerCase())
   }
 
   const handleNameOnChange = (event) => {
@@ -33,21 +79,11 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
-      <form onSubmit={addPerson}>
-        <div>
-          Name:
-          <input onChange={handleNameOnChange}/>
-        </div>
-        <div>
-          Number:
-          <input onChange={handleNumberOnChange}/>
-        </div>
-        <div>
-          <button type="submit">Add</button>
-        </div>
-      </form>
+      <Filter onChange={updatePhonebookOnChange}></Filter>
+      <h2>Add new</h2>
+      <PersonForm onSubmitHandler={addPerson} nameOnChange={handleNameOnChange} numberOnChange={handleNumberOnChange}></PersonForm>
       <h2>Numbers</h2>
-      {persons.map((person, index) => <li key={index}>{person.name} {person.number}</li>)}
+      {persons.filter(filterByName).map((person, index) => <Person key={index} name={person.name} number={person.number}></Person>)}
     </div>
   )
 }
