@@ -2,8 +2,23 @@ import { useState, useEffect } from 'react'
 import ReactDOM from 'react-dom';
 import axios from 'axios'
 
+const api_key = process.env.REACT_APP_API_KEY
+
 const FullCountry = (props) => {
+  const [weatherData, setWeatherData] = useState()
   let country = props.country
+
+  useEffect(() => {
+    const eventHandler = response => {
+      setWeatherData(response.data)
+    }
+
+    const promise = axios.get(`http://api.openweathermap.org/data/2.5/weather?q=${country.capital}&appid=${api_key}&units=metric`)
+    promise.then(eventHandler)
+  }, [country.capital])
+
+  if (!weatherData) return <p>Wait</p>
+
   return (
     <div>
       <h2>{country.name.common}</h2>
@@ -13,6 +28,10 @@ const FullCountry = (props) => {
       {Object.keys(country.languages).map((keyLanguageCode, index) => <li key={index}>{country.languages[keyLanguageCode]}</li>)}
       <br/>
       <img alt="Country flag" src={country.flags['png']}></img>
+      <h3>Weather in {country.capital}</h3>
+      <p>Temperature : {weatherData.main.temp} Celsius</p>
+      <img alt={`${country.capital} weather`} src={`http://openweathermap.org/img/wn/${weatherData.weather[0].icon}@2x.png`}></img>
+      <p>Wind : {weatherData.wind.speed} m/s</p>
     </div>
   )
 }
