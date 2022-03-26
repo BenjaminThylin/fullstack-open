@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
 import services from './services'
 
 const Filter = (props) => {
@@ -33,11 +32,36 @@ const Person = (props) => {
   return <li>{props.person.name} {props.person.number} <button onClick={props.onClickHandle}>Delete</button></li>
 }
 
+const Notification = ({visibility, isError, message}) => {
+  let isVisible = visibility
+  if (message === null || message === "") {
+    isVisible = false
+  }
+
+  const notificationStyle = {
+    color: isError ? "red" : "green",
+    fontSize: "20px",
+    backgroundColor: "lightgrey",
+    padding: "15px 20px",
+    border: isError ? "3px solid red" : "3px solid green",
+    borderRadius: "5px",
+    display: isVisible ? "inline-block" : "none"
+  }
+
+  return (
+    <div style={notificationStyle}>
+      {message}
+    </div>
+  )
+}
+
 const App = () => {
   const [persons, setPersons] = useState([])
-
   const [filterValue, setFilterValue] = useState("")
   const [newPerson, setNewPerson] = useState({name: "", number: ""})
+  const [notificationMessage, setNotificationMessage] = useState('')
+  const [isError, setIsError] = useState(false)
+  const [notificationVisibility, setNotificationVisibility] = useState(false)
 
   useEffect(() => {
     services
@@ -46,6 +70,15 @@ const App = () => {
       setPersons(initialPersons)
     })
   }, [])
+
+  const notificationHandler = (isError, message) => {
+    setNotificationMessage(message)
+    setIsError(isError)
+    setNotificationVisibility(true)
+    setTimeout(() => {
+      setNotificationVisibility(false)
+    }, 3000);
+  }
 
   const addPerson = (event) => {
     event.preventDefault()
@@ -57,12 +90,17 @@ const App = () => {
       })[0]
 
       if (existingPerson.number === newPerson.number) {
-        alert("Person already in the phonebook")
+        notificationHandler(true, "Person already in the phonebook")
       } else if (window.confirm(`${existingPerson.name} is already added to the phonebook, replace the old number with the new one?`)) {
         services
         .update(existingPerson.id, newPerson)
         .then(returnedPerson => {
           setPersons(persons.map(person => person.id !== existingPerson.id ? person : returnedPerson))
+          notificationHandler(false, `Number for ${existingPerson.name} has been updated`)
+        })
+        .catch(error => {
+          notificationHandler(true, `Information of ${existingPerson.name} has already been deleted`)
+          setPersons(persons.filter(p => p.id !== existingPerson.id))
         })
       }
     } else {
@@ -71,6 +109,7 @@ const App = () => {
       .create(tempPerson)
       .then(returnedPerson => {
         setPersons(persons.concat(returnedPerson))
+        notificationHandler(false, `Added ${returnedPerson.name}`)
       })
     }
   }
@@ -110,6 +149,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification visibility={notificationVisibility} isError={isError} message={notificationMessage}></Notification>
       <Filter onChange={updatePhonebookOnChange}></Filter>
       <h2>Add new</h2>
       <PersonForm onSubmitHandler={addPerson} nameOnChange={handleNameOnChange} numberOnChange={handleNumberOnChange}></PersonForm>
