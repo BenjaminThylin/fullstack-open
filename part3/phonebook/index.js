@@ -52,6 +52,21 @@ app.get('/api/persons/:id', (request, response) => {
 
 app.post('/api/persons', (request, response) => {
     const body = request.body
+    const nameDuplicate = persons.some(p => p.name === body.name)
+
+    if (!body.name) {
+        return response.status(400).json({
+            error: 'Name is missing'
+        })
+    } else if (!body.number) {
+        return response.status(400).json({
+            error: 'Number is missing'
+        })
+    } else if (nameDuplicate) {
+        return response.status(400).json({
+            error: 'Name must be unique'
+        })
+    }
 
     const person = {
         id: Math.floor(Math.random() * 10000),
