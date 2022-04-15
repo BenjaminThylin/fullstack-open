@@ -1,7 +1,11 @@
 const express = require('express')
+const bodyParser = require('body-parser')
 const app = express()
 const cors = require('cors')
 var morgan = require('morgan')
+
+// create application/json parser
+const jsonParser = bodyParser.json()
 
 app.use(cors())
 app.use(express.static('build'))
@@ -65,7 +69,7 @@ app.get('/api/persons/:id', (request, response) => {
     }
 })
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', jsonParser, (request, response) => {
     const body = request.body
     const nameDuplicate = persons.some(p => p.name === body.name)
 
