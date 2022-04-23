@@ -111,6 +111,9 @@ const App = () => {
         setPersons(persons.concat(returnedPerson))
         notificationHandler(false, `Added ${returnedPerson.name}`)
       })
+      .catch(error => {
+        notificationHandler(true, error.response.data)
+      })
     }
   }
 

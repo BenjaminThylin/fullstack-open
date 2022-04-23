@@ -35,7 +35,16 @@ app.get('/api/persons', (request, response) => {
     morgan('tiny')
 })
 
-app.get('/api/persons/:id', (request, response) => {
+app.get('/info', (request, response) => {
+    Person.find({}).then(person => {
+        response.send(`
+            <p>Phonebook has info for ${person.length} people</p>
+            <p>${new Date()}</p>
+        `)
+    })
+})
+
+app.get('/api/persons/:id', (request, response, next) => {
     const id = Number(request.params.id)
     Person.findById(request.params.id)
         .then(person => {
@@ -48,17 +57,13 @@ app.get('/api/persons/:id', (request, response) => {
         .catch(error => next(error))
 })
 
-app.post('/api/persons', jsonParser, (request, response) => {
+app.post('/api/persons', jsonParser, (request, response, next) => {
     const body = request.body
 
     if (!body.name) {
-        return response.status(400).json({
-            error: 'Name is missing'
-        })
+        return response.status(400).send('Name is missing')
     } else if (!body.number) {
-        return response.status(400).json({
-            error: 'Number is missing'
-        })
+        return response.status(400).json('Number is missing')
     }
 
     const person = new Person({
@@ -67,9 +72,11 @@ app.post('/api/persons', jsonParser, (request, response) => {
         number: body.number
     })
 
-    person.save().then(savedPerson => {
+    person.save()
+    .then(savedPerson => {
         response.json(savedPerson)
     })
+    .catch(error => next(error))
 })
 
 app.delete('/api/persons/:id', (request, response, next) => {
@@ -80,18 +87,8 @@ app.delete('/api/persons/:id', (request, response, next) => {
     .catch(error => next(error))
 })
 
-app.get('/info', (request, response) => {
-    Person.find({}).then(person => {
-        response.send(`
-            <p>Phonebook has info for ${person.length} people</p>
-            <p>${new Date()}</p>
-        `)
-    })
-})
-
 app.put('/api/persons/:id', jsonParser, (request, response, next) => {
     const body = request.body
-    console.log("Step 1")
 
     const person = {
         name: body.name,
@@ -100,21 +97,23 @@ app.put('/api/persons/:id', jsonParser, (request, response, next) => {
 
     Person.findByIdAndUpdate(request.params.id, person, {new : true})
         .then(updatedPerson => {
-            console.log("Step 2")
             response.json(updatedPerson)
         })
-        .catch(console.log("Step 3"))
+        .catch(error => next(error))
 })
 
-const unknownEndpoint = (request, response) => {
+/* const unknownEndpoint = (request, response) => {
     response.status(404).send({ error: 'unknown endpoint' })
 }
 
-app.use(unknownEndpoint)
+app.use(unknownEndpoint) */
 
 const errorHandler = (error, request, response, next) => {
     if (error.name == "CastError") {
         return response.status(400).send({ error: 'Malformatted id' })
+    } else if (error.name === 'ValidationError') {
+        console.log(error.message)
+        return response.status(400).send(error.message)
     }
 
     next(error)
