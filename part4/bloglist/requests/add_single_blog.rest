@@ -1,9 +1,9 @@
-POST http://localhost:3002/api/blogs
+POST http://localhost:3003/api/blogs
 Content-Type: application/json
 
 {
-  "title": "dsadasfa",
+  "title": "Testing1223145353",
   "author": "sfafg",
   "url": "www.tesdfsasfassadft.com",
-  "likes": 400
+  "likes": ""
 }
